@@ -30,6 +30,9 @@ def train_collate_fn(batch: [torch.Tensor, torch.Tensor, torch.Tensor]) -> [torc
                                                                             torch.Tensor,
                                                                             torch.Tensor]:
     images, target, target_length = zip(*batch)
+    images = list(filter(lambda x: x != None, images))
+    target = list(filter(lambda x: x != None, target))
+    target_length = list(filter(lambda x: x != None, target_length))
     images = torch.stack(images, 0)
     target = torch.cat(target, 0)
     target_length = torch.cat(target_length, 0)
@@ -83,8 +86,13 @@ class ImageDataset(Dataset):
         image_path = self.images_path[index]
 
         # Read the image and convert it to grayscale
-        image = cv2.imread(image_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        try:
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        except Exception as e:
+            print(f"Corrupted image at path {image_path}")
+            print(e)
+            return None, None, None
         # Scale to the size of the image that the model can accept
         image = cv2.resize(image, (self.image_width, self.image_height), interpolation=cv2.INTER_CUBIC)
         image = np.reshape(image, (self.image_height, self.image_width, 1))

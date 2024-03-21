@@ -81,7 +81,7 @@ def main():
     scaler = amp.GradScaler()
 
     for epoch in range(start_epoch, config.epochs):
-        train(model, train_dataloader, criterion, optimizer, epoch, scaler, writer)
+        train(model, train_dataloader, test_dataloader, criterion, optimizer, epoch, scaler, writer)
         acc = validate(model, test_dataloader, epoch, writer, "test")
         print("\n")
 
@@ -163,6 +163,7 @@ def define_optimizer(model) -> optim.Adadelta:
 
 def train(model: nn.Module,
           train_dataloader: DataLoader,
+          test_dataloader: DataLoader,
           criterion: nn.CTCLoss,
           optimizer: optim.RMSprop,
           epoch: int,
@@ -188,13 +189,13 @@ def train(model: nn.Module,
     losses = AverageMeter("Loss", ":6.6f")
     progress = ProgressMeter(batches, [batch_time, data_time, losses], prefix=f"Epoch: [{epoch + 1}]")
 
-    # Put the generative network model in training mode
-    model.train()
-
     # Get the initialization training time
     end = time.time()
 
     for batch_index, (images, target, target_length) in enumerate(train_dataloader):
+        # Put the generative network model in training mode
+        model.train()
+
         # Calculate the time it takes to load a batch of data
         data_time.update(time.time() - end)
 
@@ -238,6 +239,7 @@ def train(model: nn.Module,
             # Record loss during training and output to file
             writer.add_scalar("Train/Loss", loss.item(), batch_index + epoch * batches + 1)
             progress.display(batch_index)
+            acc = validate(model, test_dataloader, epoch, writer, "test")
 
 
 def validate(model: nn.Module,
