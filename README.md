@@ -1,76 +1,46 @@
-# CRNN-PyTorch
-
-## Overview
-
-This repository contains an op-for-op PyTorch reimplementation
-of [An End-to-End Trainable Neural Network for Image-based Sequence Recognition and Its Application to Scene Text Recognition](https://arxiv.org/abs/1507.05717)
-.
+# OCRPY
+This repository contains OCR algorithm implementations.
+Supported models include:
+|    Model    | Paper                            |
+|:-----------:|:--------------------------------:|
+|CRNN         | https://arxiv.org/abs/1507.05717 |
+|...          | ....                             |
 
 ## Table of contents
+- [Overview](#overview)
+- [Installation](#installation)
+- [Datasets](#datasets)
+- [Usage](#Usage)
+  - [Train](#train)
+  - [Predict](#predict)
+- [TODOs](#todos)
+- [Result](#result)
 
-- [CRNN-PyTorch](#crnn-pytorch)
-  - [Overview](#overview)
-  - [Table of contents](#table-of-contents)
-  - [Download weights](#download-weights)
-  - [Download datasets](#download-datasets)
-  - [How Test and Train](#how-test-and-train)
-    - [Test](#test)
-    - [Train CRNN model](#train-crnn-model)
-    - [Resume train CRNN model](#resume-train-crnn-model)
-  - [Result](#result)
-  - [Contributing](#contributing)
-  - [Credit](#credit)
-    - [An End-to-End Trainable Neural Network for Image-based Sequence Recognition and Its Application to Scene Text Recognition](#an-end-to-end-trainable-neural-network-for-image-based-sequence-recognition-and-its-application-to-scene-text-recognition)
+## Installation 
+1. Create venv:   `/opt/miniconda3/bin/python3 -m venv ocrpy3.8`
+2. Activate venv: `source ocrpy3.8/bin/activate`
+3. Install torch from whl: `pip install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0 --extra-index-url https://download.pytorch.org/whl/cu113`
+4. Install the rest of the requirements `pip install -r requirements.txt`
+5. Install ocrpy `pip install -e .`
 
-## Download weights
+## Usage
+Both training and testing configs can be found in the `configs` directory.
 
-- [Google Driver](https://drive.google.com/drive/folders/17ju2HN7Y6pyPK2CC_AqnAfTOe9_3hCQ8?usp=sharing)
-- [Baidu Driver](https://pan.baidu.com/s/1yNs4rqIb004-NKEdKBJtYg?pwd=llot)
+### Train
+Training locally:
+```
+python ocrpy/train.py --config configs/train_mjsynth.py --name mjs-crnn-lr1e-4-epoch10 --lr 1e-4 --epoch 10 --amp true --batch 512
+```
+Training on slurm:
+```
+source submit_train.sh
+```
+Change config in 'train.sh'
 
-## Download datasets
-
-Contains ICDAR2013~2019, MJSynth, SynthText, SynthAdd, Verisimilar Synthesis, UnrealText and more, etc.
-
-- [Google Driver](https://drive.google.com/drive/folders/1CwkA0gKd4bnj66W0l6CB14sx-aAe3WOE?usp=sharing)
-- [Baidu Driver](https://pan.baidu.com/s/1v31aBT5phe5Ci6N0Wsn3xQ?pwd=llot)
-
-Please refer to `README.md` in the `data` directory for the method of making a dataset.
-
-## How Test and Train
-
-Both training and testing only need to modify the `config.py` file.
-
-### Test
-
-- line 40: `mode` change to `test`.
-- line 79: `model_path` change to `results/pretrained_models/CRNN-MJSynth-e9341ede.pth.tar`.
-
-### Train CRNN model
-
-- line 40: `mode` change to `train`.
-- line 42: `exp_name` change to `CRNN_MJSynth`.
-
-### Resume train CRNN model
-
-- line 40: `mode` change to `train`.
-- line 42: `exp_name` change to `CRNN_MJSynth`.
-- line 56: `resume` change to `samples/CRNN_MJSynth/epoch_xxx.pth.tar`.
-
-## Result
-
-Source of original paper results: [https://arxiv.org/pdf/1507.05717.pdf](https://arxiv.org/pdf/1507.05717.pdf)
-
-In the following table, `-` indicates show no test.
-
-|    Model    | IIIT5K(None) | SVT(None) | IC03(None) | IC13(None) |
-|:-----------:|:------------:|:---------:|:----------:|:----------:|
-| CRNN(paper) |     78.2     |   80.8    |    89.4    |    86.7    |
-| CRNN(repo)  |   **81.5**   | **80.1**  |   **-**    |   **-**    |
-
-```bash
-# Download `CRNN-Synth90k-e9341ede.pth.tar` weights to `./results/pretrained_models`
-# More detail see `README.md<Download weights>`
-python predict.py --image_path ./figures/Available.png --weights_path ./results/pretrained_models/CRNN-MJSynth-e9341ede.pth.tar
+### Predict
+After training, arbitrary image can be predicted on.
+```
+python ocrpy/predict.py --image_path ... --weights_path ...
 ```
 
 Input: <span align="center"><img src="figures/Available.png"/></span>
@@ -83,12 +53,27 @@ Load CRNN model weights `./results/pretrained_models/CRNN-MJSynth-e9341ede.pth.t
 ``./figures/Available.png` -> `available`
 ```
 
-## Contributing
+## TODOs
+[ ] Use `omegaconf` <br />
+[ ] Integrate `torch-lightning` <br />
+[ ] Add guide and results on trdg
 
-If you find a bug, create a GitHub issue, or even better, submit a pull request. Similarly, if you have questions,
-simply post them as GitHub issues.
+## Result
 
-I look forward to seeing what the community does with these models!
+Source of original paper results: [https://arxiv.org/pdf/1507.05717.pdf](https://arxiv.org/pdf/1507.05717.pdf).<br />
+Our implementation differs in training details: image min-max normalization, `clip_grad_norm_=5`, Adam optimizer and cosine annealing lr schedule, batch size of 512 + beam search decoder with `beam_size=10`.<br />
+General problem with MJSynth and SynthText training though is the underrepresentation of number characters. (14k ~ 7M in MJSynth).<br />
+We therefore opt to synthesize our own data with trdg (TextRecognitionDataGenerator)
+|    Model    |    IIIT5K    |IC13(alphanumeric)|  IC13(all) | MJSynth |
+|:-----------:|:------------:|:----------------:|:----------:|:-------:|
+| CRNN(paper) |     78.2     |       86.7       |    77.4    |   93.9  |
+| CRNN(ours)  |   **84.7**   |        -         |  **80.1**  | **94.2**|
+
+```bash
+# Download `CRNN-Synth90k-e9341ede.pth.tar` weights to `./results/pretrained_models`
+# More detail see `README.md<Download weights>`
+python predict.py --image_path ./figures/Available.png --weights_path ./results/pretrained_models/CRNN-MJSynth-e9341ede.pth.tar
+```
 
 ## Credit
 
@@ -126,4 +111,3 @@ performs well in the task of image-based music score recognition, which evidentl
   year      = {2017}
 }
 ```
-

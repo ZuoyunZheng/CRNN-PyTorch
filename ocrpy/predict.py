@@ -12,22 +12,22 @@
 # limitations under the License.
 # ==============================================================================
 import argparse
+import importlib
 
 import cv2
 import numpy as np
 import torch
 from torch.nn import functional as F
 
-import config
-import imgproc
-from decoder import ctc_decode
-from model import CRNN
+from ocrpy.dataset import imgproc
+from ocrpy.decoder import ctc_decode
+from ocrpy.model import CRNN
 
 
 def main(args):
     # Initialize the model
-    model = CRNN(config.model_num_classes)
-    model = model.to(device=config.device)
+    model = CRNN(args.config.model_num_classes)
+    model = model.to(device=args.config.device)
     print("Build CRNN model successfully.")
 
     # Load the CRNN model weights
@@ -66,8 +66,14 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="CRNN model predicts character content in images.")
+    parser.add_argument("--config", type=str, default="/home/zuoyun.zheng/gitlab/ocrpy/configs/test_icdar2013.py", help="Path to config file")
     parser.add_argument("--image_path", type=str, help="Character image address to be tested.")
-    parser.add_argument("--weights_path", type=str, help="Model weight file path.")
+    parser.add_argument("--weights_path", type=str, default="results/mjsynth-crnn-lr5e-4-epoch10/best.pth.tar", help="Model weight file path.")
     args = parser.parse_args()
+    # Load config python script
+    config_spec = importlib.util.spec_from_file_location("config", args.config)
+    config = importlib.util.module_from_spec(config_spec)
+    config_spec.loader.exec_module(config)
+    args.config = config
 
     main(args)

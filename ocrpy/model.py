@@ -41,6 +41,8 @@ class CRNN(nn.Module):
 
     def __init__(self, num_classes: int):
         super(CRNN, self).__init__()
+        self.dropout = nn.Dropout(p=0.1)
+        self.conv_dropout = nn.Dropout(p=0.1)
         self.convolutional_layers = nn.Sequential(
             nn.Conv2d(1, 64, (3, 3), (1, 1), (1, 1), bias=True),
             nn.ReLU(True),
@@ -83,9 +85,11 @@ class CRNN(nn.Module):
     # Support torch.script function
     def _forward_impl(self, x: torch.Tensor) -> torch.Tensor:
         # Feature sequence
+        x = self.dropout(x)
         features = self.convolutional_layers(x)  # [b, c, h, w]
         features = features.squeeze(2)  # [b, c, w]
         features = features.permute(2, 0, 1)  # [w, b, c]
+        #features = self.conv_dropout(features)
 
         # Deep bidirectional LSTM
         out = self.recurrent_layers(features)

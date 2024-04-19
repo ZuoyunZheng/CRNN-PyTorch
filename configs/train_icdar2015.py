@@ -22,7 +22,7 @@ random.seed(0)
 torch.manual_seed(0)
 np.random.seed(0)
 # Use GPU for training by default
-device = torch.device("cpu", 0)
+device = torch.device("cuda", 0)
 # Turning on when the image size does not change during training can speed up training
 cudnn.benchmark = True
 # character to be recognized
@@ -37,44 +37,26 @@ model_image_height = 32
 mean = 0.5
 std = 0.5
 # Current configuration parameter method
-mode = "test"
+mode = "train"
 # Experiment name, easy to save weights and log files
-exp_name = "CRNN_MJSynth"
+exp_name = "CRNN_ICDAR2015"
 
 if mode == "train":
     # Train dataset
-    train_dataroot = "./data/MJSynth"
-    annotation_train_file_name = "annotation_train.txt"
+    train_dataroot = "./data/ICDARChallenge4"
     # Test dataset
-    test_dataroot = "./data/IIIT5K"
-    annotation_test_file_name = "annotation_test.txt"
-
-    batch_size = 64
-    num_workers = 4
+    test_dataroot = "./data/ICDARChallenge2/ICDAR2013/recognition"
+    batch_size = 128
+    num_workers = 1
 
     # Incremental training and migration training
     resume = ""
 
     # Total num epochs
-    epochs = 5
+    epochs = 50
 
     # Adadelta optimizer parameter
-    model_lr = 1.0
+    model_lr = 0.0001
 
     # How many iterations to print the training result
-    print_frequency = 1000
-
-if mode == "test":
-    # Whether to enable half-precision inference
-    fp16 = False
-
-    # The path and name of the folder where the verification results are saved
-    result_dir = "./results/test"
-    result_file_name = "IC13_test.txt"
-
-    # The directory path where the dataset to be verified is located
-    dataroot = "./data/ICDAR2013"
-    annotation_file_name = "annotation_test.txt"
-
-    #model_path = "results/CRNN_MJSynth/last.pth.tar"
-    model_path = "results/pretrained_models/CRNN-MJSynth-e9341ede.pth.tar"
+    print_frequency = 5

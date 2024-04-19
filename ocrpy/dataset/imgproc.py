@@ -46,6 +46,10 @@ def image2tensor(image: np.ndarray,
     image = image.astype(np.float32)
     image /= 255.
 
+    # Min Max scaling
+    if image.max()-image.min() < 0.04: raise Exception("Low Contrast")
+    image = (image-image.min())/(image.max()-image.min())
+
     # HWC convert to CHW
     image = image.transpose([2, 0, 1])
 
