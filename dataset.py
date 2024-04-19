@@ -18,7 +18,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-import imgproc
+from .imgproc import *
 
 __all__ = [
     "train_collate_fn", "valid_test_collate_fn",
@@ -77,6 +77,8 @@ class ImageDataset(Dataset):
         with open(os.path.join(self.dataroot, self.annotation_file_name), "r", encoding="UTF-8") as f:
             for line in f.readlines():
                 image_path, image_target = line.strip().split(" ")
+                #image_path = line.strip().split(" ")[0]
+                #image_target = image_path.split("_")[1].lower()
                 images_path.append(os.path.join(self.dataroot, image_path))
                 images_target.append(image_target)
 

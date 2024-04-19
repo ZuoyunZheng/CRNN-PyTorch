@@ -39,7 +39,7 @@ def load_dataloader() -> DataLoader:
                             shuffle=False,
                             num_workers=1,
                             collate_fn=valid_test_collate_fn,
-                            pin_memory=True,
+                            pin_memory=False,
                             drop_last=False,
                             persistent_workers=True)
 
@@ -105,7 +105,7 @@ def main() -> None:
                     total_correct += 1
 
                 if batch_index < total_files - 1:
-                    information = f"`{os.path.basename(image_path[0])}` -> `{''.join(prediction_chars[0])}`"
+                    information = f"`{os.path.basename(image_path[0])}`: `{labels[0]}`-> `{''.join(prediction_chars[0])}`"
                     print(information)
                 else:
                     information = f"Acc: {total_correct / total_files * 100:.2f}%"

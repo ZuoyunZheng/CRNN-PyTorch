@@ -22,7 +22,7 @@ random.seed(0)
 torch.manual_seed(0)
 np.random.seed(0)
 # Use GPU for training by default
-device = torch.device("cuda", 0)
+device = torch.device("cpu", 0)
 # Turning on when the image size does not change during training can speed up training
 cudnn.benchmark = True
 # character to be recognized
@@ -37,7 +37,7 @@ model_image_height = 32
 mean = 0.5
 std = 0.5
 # Current configuration parameter method
-mode = "train"
+mode = "test"
 # Experiment name, easy to save weights and log files
 exp_name = "CRNN_MJSynth"
 
@@ -66,14 +66,15 @@ if mode == "train":
 
 if mode == "test":
     # Whether to enable half-precision inference
-    fp16 = True
+    fp16 = False
 
     # The path and name of the folder where the verification results are saved
     result_dir = "./results/test"
-    result_file_name = "IIIT5K_result.txt"
+    result_file_name = "IC13_test.txt"
 
     # The directory path where the dataset to be verified is located
-    dataroot = "./data/IIIT5K"
+    dataroot = "./data/ICDAR2013"
     annotation_file_name = "annotation_test.txt"
 
+    #model_path = "results/CRNN_MJSynth/last.pth.tar"
     model_path = "results/pretrained_models/CRNN-MJSynth-e9341ede.pth.tar"
